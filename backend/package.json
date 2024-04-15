@@ -1,6 +1,20 @@
 {
+  "config": {
+    "name": "food-app-backend",
+    "version": "1.0.0",
+    "description": "passport",
+    "main": "app.js",
+    "scripts": {
+      "start": "nodemon app.js"
+    }
+  },
   "dependencies": {
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
     "express": "^4.19.2",
-    "mongoose": "^8.3.0"
+    "express-session": "^1.18.0",
+    "mongoose": "^8.3.0",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0"
   }
 }
