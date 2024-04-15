@@ -10,6 +10,7 @@ require('./passport-config')(passport);
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(session({ secret: 'secret', resave: true, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -45,6 +46,39 @@ app.post('/login', passport.authenticate('local', {
     failureRedirect: '/login',
     failureFlash: true
 }));
+
+app.post('/logout', (req, res) => {
+    req.logout();
+    res.redirect('/');
+});
+
+app.get('/search', async (req, res) => {
+    let { q: query, p: page } = req.query;
+    if (!page || page < 0) page = 0;
+
+    if (!query) {
+        res.status(400).send('Query parameter is required (q=)');
+        return;
+    }
+
+    const response = await fetch(`https://api.igdb.com/v4/games/`, {
+        method: 'POST',
+        headers: {
+            "Accept": "application/json",
+            "Client-ID": "bwmhssy6u1fe80lb7ou9z7f6n4gbje",
+            "Authorization": "Bearer ubmwzqkcq304n8lfbilehq0z7mhujj"
+        },
+        body: `search "${query}"; fields first_release_date, status, name, cover.*, total_rating; ` +
+            `where total_rating_count >= 10; limit ${10}; offset ${page * 10};`,
+    }).catch((error) => {
+        console.error('Error:', error);
+    });
+
+    const data = await response.json();
+    console.log(data);
+
+    res.send(data);
+});
 
 app.listen(3000, () => {
     console.log('Server started on http://localhost:3000');
