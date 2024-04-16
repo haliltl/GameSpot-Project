@@ -10,7 +10,12 @@ function isAuthenticated(req, res, next) {
     res.status(401).send('User is not authenticated');
 }
 
-router.get('/', isAuthenticated, async (req, res) => {
+router.get('/genres', isAuthenticated, async (req, res) => {
+    const user = await User.findById(req.user.id);
+    res.send(user.genre_history);
+});
+
+router.get('/favourite/', isAuthenticated, async (req, res) => {
     try {
         const userId = req.user.id;
         const user = await User.findById(userId);
@@ -22,7 +27,7 @@ router.get('/', isAuthenticated, async (req, res) => {
     }
 });
 
-router.put('/:id', isAuthenticated, async (req, res) => {
+router.put('/favourite/:id', isAuthenticated, async (req, res) => {
     try {
         const userId = req.user.id;
         const { id: itemId } = req.params;
@@ -34,7 +39,7 @@ router.put('/:id', isAuthenticated, async (req, res) => {
             return;
         }
 
-        await User.findByIdAndUpdate(userId, { $push: { favourites: itemId }});
+        await User.findByIdAndUpdate(userId, { $push: { favourite_games: itemId }});
 
         res.status(201).send('Item added to favourites.');
     } catch (error) {
@@ -43,7 +48,7 @@ router.put('/:id', isAuthenticated, async (req, res) => {
     }
 });
 
-router.delete('/:id', isAuthenticated, async (req, res) => {
+router.delete('/favourite/:id', isAuthenticated, async (req, res) => {
     try {
         const userId = req.user.id;
         const { id: itemId } = req.params;

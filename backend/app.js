@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const passport = require('passport');
 const session = require('express-session');
 const bodyParser = require('body-parser');
-const User = require('./models/User');
 const bcrypt = require('bcrypt');
 require('./passport-config')(passport);
 
@@ -15,7 +14,7 @@ app.use(session({ secret: 'secret', resave: true, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use('/favourites', require('./routes/favourites'));
+app.use('/user', require('./routes/user'));
 app.use('/game', require('./routes/game'));
 app.use('/auth', require('./routes/auth'));
 

@@ -12,15 +12,7 @@ function isAuthenticated(req, res, next) {
     res.status(401).send('User is not authenticated');
 }
 
-router.get('/search', async (req, res) => {
-    let {q: query, p: page} = req.query;
-    if (!page || page < 0) page = 0;
-
-    if (!query) {
-        res.status(400).send('Query parameter is required (q=)');
-        return;
-    }
-
+const fetchGamesFromQuery = async (query, page) => {
     const response = await fetch(`https://api.igdb.com/v4/games/`, {
         method: 'POST',
         headers: {
@@ -34,8 +26,41 @@ router.get('/search', async (req, res) => {
         console.error('Error:', error);
     });
 
-    const data = await response.json();
-    console.log(data);
+    return response.json();
+}
+
+const fetchGamesFromGenres = async (genres) => {
+    const response = await fetch('https://api.igdb.com/v4/games', {
+        method: 'POST',
+        headers: {
+            "Accept": "application/json",
+            "Client-ID": "bwmhssy6u1fe80lb7ou9z7f6n4gbje",
+            "Authorization": "Bearer ubmwzqkcq304n8lfbilehq0z7mhujj"
+        },
+        body: `fields first_release_date, status, name, cover.*, total_rating; ` +
+            `where genres = (${genres}) & total_rating_count >= 40; sort total_rating desc; limit 15;`
+    }).catch((error) => {
+        console.error('Error:', error);
+    });
+
+    return response.json();
+}
+
+router.get('/search', async (req, res) => {
+    let {q: query, p: page, genres} = req.query;
+    if (!page || page < 0) page = 0;
+
+    if (!query && !genres) {
+        res.status(400).send('You must provide a query or genres');
+        return;
+    }
+
+    if (query && genres) {
+        res.status(400).send('You must provide either a query or genres, not both');
+        return;
+    }
+
+    const data = query ? await fetchGamesFromQuery(query, page) : await fetchGamesFromGenres(genres);
 
     res.send(data);
 });
