@@ -3,9 +3,16 @@ const router = express.Router();
 
 const Comment = require('../models/Comment');
 
+function isAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    console.error('User is not authenticated');
+    res.status(401).send('User is not authenticated');
+}
 
 router.get('/search', async (req, res) => {
-    let { q: query, p: page } = req.query;
+    let {q: query, p: page} = req.query;
     if (!page || page < 0) page = 0;
 
     if (!query) {
@@ -33,7 +40,7 @@ router.get('/search', async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
-    const { id } = req.params;
+    const {id} = req.params;
 
     if (!id || id < 0) {
         res.status(400).send('Invalid game ID');
@@ -50,14 +57,15 @@ router.get('/:id', async (req, res) => {
         body: `fields *, 
         involved_companies.*, involved_companies.company.name, 
         release_dates.*, release_dates.platform.*,
+        genres.*, keywords.name,
         screenshots.*, similar_games.*, websites.*, language_supports.*; where id = ${id};`
     }).catch((error) => {
         console.error('Error:', error);
         res.status(500).send('An error occurred while fetching game data');
         return null;
-    }).then((response) => {
+    }).then(async (response) => {
         if (!response.ok) {
-            console.error('Response is not OK:', response.status, response.statusText);
+            console.error('Response is not OK:', response.status, response.statusText, await response.json());
             res.status(500).send('An error occurred while fetching game data');
             return null;
         }
@@ -73,7 +81,7 @@ router.get('/:id', async (req, res) => {
 });
 
 router.get('/:id/similar', async (req, res) => {
-    const { id } = req.params;
+    const {id} = req.params;
 
     if (!id || id < 0) {
         res.status(400).send('Invalid game ID');
@@ -99,78 +107,80 @@ router.get('/:id/similar', async (req, res) => {
 });
 
 router.get('/:id/comment', async (req, res) => {
-    const { id } = req.params;
+    const {id} = req.params;
 
     if (!id || id < 0) {
         res.status(400).send('Invalid game ID');
         return;
     }
 
-    const comments = await Comment.find({game: id});
-
-    res.send(comments);
-});
-
-router.post('/:id/comment', async (req, res) => {
-    const { id } = req.params;
-    const { comment } = req.body;
-
-    if (!id || id < 0) {
-        res.status(400).send('Invalid game ID');
-        return;
-    }
-
-    if (!comment) {
-        res.status(400).send('Comment is required');
-        return;
-    }
-
-    if (!req.isAuthenticated()) {
-        res.status(401).send('User is not authenticated');
-        return;
-    }
-
-    await Comment.create({game: id, user: req.user.id, comment});
-
-    res.status(201).send('Comment added');
-});
-
-router.delete('/:id/comment', async (req, res) => {
-    const { id } = req.params;
-
-    if (!id || id < 0) {
-        res.status(400).send('Invalid game ID');
-        return;
-    }
-
-    if (!comment) {
-        res.status(400).send('Comment is required');
-        return;
-    }
-
-    if (!req.isAuthenticated()) {
-        res.status(401).send('User is not authenticated');
-        return;
-    }
-
-    const comment = await Comment.findById(id);
-    if (!comment) {
-        res.status(404).send('Comment not found');
-        return;
-    }
-
-    const requester = req.user.id;
-    if (comment.user.id !== requester) {
-        res.status(403).send('User is not authorized to delete this comment');
-        return;
-    }
-
-    await Comment.findByIdAndDelete(id).catch((error) => {
+    try {
+        const comments = await Comment.find({game: id});
+        res.send(comments);
+    } catch (error) {
         console.error('Error:', error);
-        res.status(500).send('An error occurred while deleting the comment');
+        res.status(500).send('An error occurred while fetching comments');
+    }
+
+});
+
+router.post('/:id/comment', isAuthenticated, async (req, res) => {
+    const {id} = req.params;
+    const {comment: msg} = req.body;
+
+    if (!id || id < 0) {
+        res.status(400).send('Invalid game ID');
         return;
+    }
+
+    if (!msg) {
+        res.status(400).send('Comment is required');
+        return;
+    }
+
+    const comment = new Comment({
+        game: id,
+        user: req.user._id,
+        comment: msg,
     });
-    res.status(200).send('Comment removed');
+
+    try {
+        await comment.save();
+        res.status(201).send('Comment added');
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).send('An error occurred while adding the comment');
+    }
+});
+
+router.delete('/:id/comment/:cid', isAuthenticated, async (req, res) => {
+    const {id, cid: commentId} = req.params;
+
+    if (!id || id < 0) {
+        res.status(400).send('Invalid game ID');
+        return;
+    }
+
+    try {
+        const comment = await Comment.findById(commentId);
+        if (!comment) {
+            res.status(404).send('Comment not found');
+            return;
+        }
+
+        if (comment.user._id.toString() !== req.user._id.toString()) {
+            console.log('req.user._id:', req.user._id.toString());
+            console.log('comment.user._id:', comment.user._id.toString());
+            res.status(403).send('User is not authorized to delete this comment');
+            return;
+        }
+
+        await Comment.findByIdAndDelete(commentId);
+        res.status(200).send('Comment removed');
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).send('An error occurred while removing the comment');
+    }
 });
 
 
