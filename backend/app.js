@@ -19,7 +19,7 @@ app.use('/game', require('./routes/game'));
 app.use('/auth', require('./routes/auth'));
 
 
-mongoose.connect('mongodb://project:projectpassword123@10.0.0.25:27017/project-db')
+mongoose.connect('mongodb://project:projectpassword123@99.247.239.46:27017/project-db')
     .catch(error => console.error(error));
 
 const db = mongoose.connection;

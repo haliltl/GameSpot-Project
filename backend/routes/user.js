@@ -10,9 +10,14 @@ function isAuthenticated(req, res, next) {
     res.status(401).send('User is not authenticated');
 }
 
-router.get('/genres', isAuthenticated, async (req, res) => {
-    const user = await User.findById(req.user.id);
-    res.send(user.genre_history);
+router.get('/profile', isAuthenticated, (req, res) => {
+    if (req.isAuthenticated()) {
+        const user = req.user;
+        user.password = undefined;
+        res.status(200).send(user);
+    } else {
+        res.status(401).send('Not authenticated');
+    }
 });
 
 router.get('/favourite/', isAuthenticated, async (req, res) => {

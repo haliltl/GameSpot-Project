@@ -26,7 +26,7 @@ const fetchGamesFromQuery = async (query, page) => {
         console.error('Error:', error);
     });
 
-    return response.json();
+    return await response.json();
 }
 
 const fetchGamesFromGenres = async (genres) => {
@@ -43,7 +43,7 @@ const fetchGamesFromGenres = async (genres) => {
         console.error('Error:', error);
     });
 
-    return response.json();
+    return await response.json();
 }
 
 router.get('/search', async (req, res) => {

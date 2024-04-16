@@ -4,13 +4,6 @@ const User = require("../models/User");
 const passport = require("passport");
 const router = express.Router();
 
-router.get('/authenticated', (req, res) => {
-    if (req.isAuthenticated()) {
-        res.status(200).send('Authenticated');
-    } else {
-        res.status(401).send('Not authenticated');
-    }
-});
 
 router.post('/register', async (req, res) => {
     try {
