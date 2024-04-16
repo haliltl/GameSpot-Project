@@ -4,6 +4,7 @@ const passport = require('passport');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
+const cors = require('cors');
 require('./passport-config')(passport);
 
 const app = express();
@@ -13,13 +14,18 @@ app.use(bodyParser.json());
 app.use(session({ secret: 'secret', resave: true, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(cors());
+
+app.use(cors({
+  origin: 'http://localhost:3001'
+}));
 
 app.use('/user', require('./routes/user'));
 app.use('/game', require('./routes/game'));
 app.use('/auth', require('./routes/auth'));
 
 
-mongoose.connect('mongodb://project:projectpassword123@10.0.0.25:27017/project-db')
+mongoose.connect('mongodb://project:projectpassword123@99.247.239.46:27017/project-db')
     .catch(error => console.error(error));
 
 const db = mongoose.connection;

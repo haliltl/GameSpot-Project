@@ -17,7 +17,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/search" element={<SearchBar />} />
-          <Route path="/details" element={<GameDetails />}></Route>
+          <Route path="/details/:gameId" element={<GameDetails />}></Route>
         </Routes>
 
       </div>
