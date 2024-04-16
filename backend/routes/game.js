@@ -26,7 +26,7 @@ const fetchGamesFromQuery = async (query, page) => {
         console.error('Error:', error);
     });
 
-    return response.json();
+    return await response.json();
 }
 
 const fetchGamesFromGenres = async (genres) => {
@@ -43,7 +43,7 @@ const fetchGamesFromGenres = async (genres) => {
         console.error('Error:', error);
     });
 
-    return response.json();
+    return await response.json();
 }
 
 router.get('/search', async (req, res) => {
@@ -83,7 +83,9 @@ router.get('/:id', async (req, res) => {
         body: `fields *, 
         involved_companies.*, involved_companies.company.name, 
         release_dates.*, release_dates.platform.*,
-        genres.*, keywords.name,
+        genres.*, 
+        keywords.name,
+        cover.*,
         screenshots.*, similar_games.*, websites.*, language_supports.*; where id = ${id};`
     }).catch((error) => {
         console.error('Error:', error);
