@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 const commentSchema = new mongoose.Schema({
-    username: { type: String, required: true },
-    gameId: { type: Number, required: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    game: { type: Number, required: true },
     comment: { type: String, required: true },
-    date: { type: Date, required: true }
+    date: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model('Comment', commentSchema);
