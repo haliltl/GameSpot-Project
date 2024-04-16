@@ -1,12 +1,10 @@
 {
-  "config": {
-    "name": "food-app-backend",
-    "version": "1.0.0",
-    "description": "passport",
-    "main": "app.js",
-    "scripts": {
-      "start": "nodemon app.js"
-    }
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "passport",
+  "main": "node app.js",
+  "scripts": {
+    "start": "nodemon app.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
