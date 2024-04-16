@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const Comment = require('../models/Comment');
+const User = require('../models/User');
 
 function isAuthenticated(req, res, next) {
     if (req.isAuthenticated()) {
@@ -75,7 +76,32 @@ router.get('/:id', async (req, res) => {
     if (!response) return;
 
     const data = await response.json();
-    console.log(data);
+
+    if (req.isAuthenticated()) {
+        const userId = req.user.id;
+        const genres = data[0].genres;
+
+        console.log('Authenticated user:', userId);
+        console.log('Genres:', genres);
+
+        try {
+            if (genres) {
+                console.log('Updating genre history');
+                let incOperation = {$inc: {}};
+                genres.forEach(genre => {
+                    incOperation.$inc[`genre_history.${genre.id}`] = 1;
+                });
+                console.log('incOperation:', incOperation);
+
+                await User.updateOne(
+                    {_id: userId},
+                    incOperation
+                );
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
 
     res.send(data);
 });
