@@ -11,6 +11,9 @@ export default function Navigation() {
         <Link to="/" id="title">Game Spotter</Link>
         <ul>
           <CustomLink to="/">Home</CustomLink>
+          <CustomLink to="/search">Search</CustomLink>
+          <CustomLink to="/details">Details</CustomLink>
+
         </ul>
  
       </nav>
