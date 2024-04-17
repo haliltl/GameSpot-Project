@@ -87,8 +87,13 @@ const GameDetails = () => {
             {gameDetails && (
                 <div>
                     <h2>{gameDetails.name}</h2>
-                    {gameDetails.cover && <img src={`https://images.igdb.com/igdb/image/upload/t_1080p/${gameDetails.cover.url.split('/').pop()}`} 
-                      alt={`Cover for ${gameDetails.name}`} />}
+                    {gameDetails.cover &&
+                      <img
+                        src={`https://images.igdb.com/igdb/image/upload/t_1080p/${gameDetails.cover.url.split('/').pop()}`}
+                        alt={`Cover for ${gameDetails.name}`}
+                        style={{ height: '300px' }}
+                      />
+                    }
                     <p><strong>Release Date:</strong> {new Date(gameDetails.first_release_date).toLocaleDateString()}</p>
                     {gameDetails.total_rating && <p><strong>Rating:</strong> {gameDetails.total_rating.toFixed(2)}</p>}
                     <h3>Similar Games</h3>
