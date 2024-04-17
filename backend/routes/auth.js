@@ -7,6 +7,13 @@ const router = express.Router();
 
 router.post('/register', async (req, res) => {
     try {
+        // find by username case insensitive
+        const existingUser = await User.findOne({username: {$regex: new RegExp(req.body.username, 'i')}});
+        if (existingUser) {
+            res.status(400).send('User already exists');
+            return;
+        }
+
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
         const user = new User({
             username: req.body.username,
