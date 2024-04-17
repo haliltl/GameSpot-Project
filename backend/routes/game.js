@@ -59,17 +59,21 @@ router.get('/search/genres', async (req, res) => {
     let {g: genre} = req.query;
 
     if (!genre) {
-        res.status(400).send('You must provide a genre');
-        return;
-    }
+        try {
+            const data = await fetchIgdb('genres', `fields name, slug; limit 500;`);
+            res.send(data);
+        } catch (error) {
+            res.status(500).send('An error occurred while fetching genres');
+        }
+    } else {
+        try {
+            const data = await fetchIgdb('games', `fields first_release_date, status, name, cover.*, total_rating;
+            where genres = (${genre}) & total_rating_count >= 10; limit 10;`)
 
-    try {
-        const data = await fetchIgdb('games', `fields first_release_date, status, name, cover.*, total_rating;
-        where genres = (${genre}) & total_rating_count >= 10; limit 10;`)
-
-        res.send(data);
-    } catch (error) {
-        res.status(500).send('An error occurred while fetching game data');
+            res.send(data);
+        } catch (error) {
+            res.status(500).send('An error occurred while fetching genre search');
+        }
     }
 });
 
