@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const passport = require("passport");
+const {sign} = require("jsonwebtoken");
 const router = express.Router();
 
 
@@ -21,6 +22,12 @@ router.post('/register', async (req, res) => {
         });
         await user.save();
         res.status(201).send('User created');
+        req.login(user, (err) => {
+            if (err) {
+                return next(err);
+            }
+            return res.status(200).send('Logged in');
+        });
     } catch(err) {
         console.error('An error occurred', err);
         res.status(500).send('An error occurred while registering');
@@ -28,14 +35,13 @@ router.post('/register', async (req, res) => {
 });
 
 router.post('/login', passport.authenticate('local', {
-    successRedirect: '/',
-    failureRedirect: '/login',
-    failureFlash: true
-}));
+    session: false
+}), (req, res) => {
+    const token = sign(req.user.toJSON(), "supersecurejwtkey");
 
-router.post('/logout', (req, res) => {
-    req.logout();
-    res.status(200).send('Logged out');
+    res.status(200).json({
+        token
+    });
 });
 
 module.exports = router;

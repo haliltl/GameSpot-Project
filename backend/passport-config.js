@@ -7,16 +7,20 @@ module.exports = function(passport) {
         async (username, password, done) => {
             const user = await User.findOne({ username: username });
             if (!user) {
+              console.log('No user with that username');
                 return done(null, false, { message: 'No user with that username' });
             }
 
             try {
                 if (await bcrypt.compare(password, user.password)) {
+                  console.log('Password correct');
                     return done(null, user);
                 } else {
+                  console.log('Password incorrect');
                     return done(null, false, { message: 'Password incorrect' });
                 }
             } catch (e) {
+              console.log('Error');
                 return done(e);
             }
         }));

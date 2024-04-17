@@ -1,23 +1,29 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
 
 function isAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-        return next();
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        const token = authHeader.split(' ')[1];
+        jwt.verify(token, 'supersecurejwtkey', (err, user) => {
+            if (err) {
+                console.error('Token is not valid');
+                return res.status(403).send('Token is not valid');
+            }
+            req.user = user;
+            next();
+        });
+    } else {
+        return res.status(401).send('Token is not supplied');
     }
-    console.error('User is not authenticated');
-    res.status(401).send('User is not authenticated');
 }
 
 router.get('/profile', isAuthenticated, (req, res) => {
-    if (req.isAuthenticated()) {
-        const user = req.user;
-        user.password = undefined;
-        res.status(200).send(user);
-    } else {
-        res.status(401).send('Not authenticated');
-    }
+    const user = req.user;
+    user.password = undefined;
+    res.status(200).send(user);
 });
 
 router.get('/favourite/', isAuthenticated, async (req, res) => {

@@ -3,14 +3,45 @@ const router = express.Router();
 
 const Comment = require('../models/Comment');
 const User = require('../models/User');
+const {verify} = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 
 function isAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-        return next();
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        const token = authHeader.split(' ')[1];
+        jwt.verify(token, 'supersecurejwtkey', (err, user) => {
+            if (err) {
+                console.error('Token is not valid');
+                return res.status(403).send('Token is not valid');
+            }
+            req.user = user;
+            next();
+        });
+    } else {
+        return res.status(401).send('Token is not supplied');
     }
-    console.error('User is not authenticated');
-    res.status(401).send('User is not authenticated');
 }
+
+function isAuthenticatedCallback(req, cb) {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        const token = authHeader.split(' ')[1];
+        jwt.verify(token, 'supersecurejwtkey', (err, user) => {
+            if (err) {
+                console.error('Token is not valid');
+                cb(false);
+            } else {
+                req.user = user;
+                cb(true);
+            }
+        }
+        );
+    } else {
+        cb(false);
+    }
+}
+
 
 const fetchIgdb = async (endpoint, body) => {
     try {
@@ -80,11 +111,9 @@ router.get('/search/genres', async (req, res) => {
 router.get('/recent', async (req, res) => {
     try {
         const dateThreshold = Math.floor(new Date().getTime() / 1000) - (60 * 60 * 24 * 60); // 60 days
-        console.log('dateThreshold:', dateThreshold);
 
         const data = await fetchIgdb('games', `fields first_release_date, status, name, cover.*, total_rating;
         where total_rating_count >= 5 & first_release_date > ${dateThreshold}; sort total_rating desc; limit 20;`);
-        console.log(data)
 
         res.send(data);
     } catch (error) {
@@ -110,7 +139,9 @@ router.get('/:id', async (req, res) => {
         res.send(data);
         // send data then update genre history
 
-        if (req.isAuthenticated()) {
+        isAuthenticatedCallback(req, async (isAuthenticated) => {
+            if (!isAuthenticated) return;
+
             const userId = req.user.id;
             const genres = data[0].genres;
 
@@ -121,17 +152,16 @@ router.get('/:id', async (req, res) => {
                     genres.forEach(genre => {
                         incOperation.$inc[`genre_history.${genre.id}`] = 1;
                     });
-                    console.log('incOperation:', incOperation);
 
                     await User.updateOne(
-                        {_id: userId},
-                        incOperation
+                      {_id: userId},
+                      incOperation
                     );
                 }
             } catch (error) {
                 console.error('Error:', error);
             }
-        }
+        });
     } catch (error) {
         res.status(500).send('An error occurred while fetching game data');
     }
@@ -216,8 +246,6 @@ router.delete('/:id/comment/:cid', isAuthenticated, async (req, res) => {
         }
 
         if (comment.user._id.toString() !== req.user._id.toString()) {
-            console.log('req.user._id:', req.user._id.toString());
-            console.log('comment.user._id:', comment.user._id.toString());
             res.status(403).send('User is not authorized to delete this comment');
             return;
         }

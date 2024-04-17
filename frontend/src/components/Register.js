@@ -1,7 +1,14 @@
 import {useState} from "react";
+import {useAuth} from "../context/AuthContext";
 
 const Register = () => {
   const [error, setError] = useState(null);
+
+  const { isAuthenticated } = useAuth();
+
+  if (isAuthenticated) {
+    window.location.href = '/';
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();

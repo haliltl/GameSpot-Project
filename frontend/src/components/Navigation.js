@@ -1,8 +1,10 @@
 import React from "react";
 import { Link, useMatch, useResolvedPath } from "react-router-dom";
 
+import { useAuth } from "../context/AuthContext";
 
 export default function Navigation() {
+  const { isAuthenticated } = useAuth();
 
   return (
     <>
@@ -13,6 +15,16 @@ export default function Navigation() {
           <CustomLink to="/">Home</CustomLink>
           <CustomLink to="/search">Search</CustomLink>
           <CustomLink to="/details">Details</CustomLink>
+          {isAuthenticated ? (
+            <>
+              <CustomLink to="/logout">Logout</CustomLink>
+            </>
+          ) : (
+            <>
+              <CustomLink to="/register">Register</CustomLink>
+              <CustomLink to="/login">Login</CustomLink>
+            </>
+          )}
 
         </ul>
  

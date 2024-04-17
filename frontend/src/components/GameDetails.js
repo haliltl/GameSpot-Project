@@ -5,7 +5,7 @@ import axios from 'axios';
 
 
 const GameDetails = () => {
-    let { gameId } = useParams();
+  let { gameId } = useParams();
     const [gameDetails, setGameDetails] = useState(null);
     const [similarGames, setSimilarGames] = useState([]);
     const [comments, setComments] = useState([]);
@@ -17,14 +17,13 @@ const GameDetails = () => {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-    
-      console.log(gameId)
+
       try {
-        const detailsResponse = await axios({
-          method: 'GET',
-          url: `http://localhost:3000/game/${gameId}`, 
+        const detailsResponse = await axios.get(`http://localhost:3000/game/${gameId}`, {
+          headers: {
+            Authorization: 'Bearer ' + localStorage.getItem('token'),
+          }
         });
-        console.log(detailsResponse)
 
 
         console.log(detailsResponse.data)
