@@ -14,7 +14,6 @@ export default function Navigation() {
         <ul>
           <CustomLink to="/">Home</CustomLink>
           <CustomLink to="/search">Search</CustomLink>
-          <CustomLink to="/details">Details</CustomLink>
           {isAuthenticated ? (
             <>
               <CustomLink to="/logout">Logout</CustomLink>
