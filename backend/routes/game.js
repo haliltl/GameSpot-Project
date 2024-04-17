@@ -78,7 +78,7 @@ router.get('/search', async (req, res) => {
     try {
         const data = await fetchIgdb('games', `search "${query}"; 
         fields first_release_date, status, name, cover.*, total_rating; 
-        where total_rating_count >= 10; limit ${10}; offset ${page * 10};`)
+        where total_rating_count >= 10; limit ${24}; offset ${page * 10};`)
 
         res.send(data);
     } catch (error) {
@@ -99,7 +99,7 @@ router.get('/search/genres', async (req, res) => {
     } else {
         try {
             const data = await fetchIgdb('games', `fields first_release_date, status, name, cover.*, total_rating;
-            where genres = (${genre}) & total_rating_count >= 10 & total_rating > 80; limit 10;`)
+            where genres = (${genre}) & total_rating_count >= 10 & total_rating > 80; limit 12;`)
 
             res.send(data);
         } catch (error) {

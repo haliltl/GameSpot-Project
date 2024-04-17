@@ -5,6 +5,7 @@ body {
   margin: 0;
   padding: 20px;
   color: #333;
+  flex-direction: row;
 }
 .Home {
   padding: 20px;
