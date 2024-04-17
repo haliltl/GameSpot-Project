@@ -12,57 +12,65 @@ function isAuthenticated(req, res, next) {
     res.status(401).send('User is not authenticated');
 }
 
-const fetchGamesFromQuery = async (query, page) => {
-    const response = await fetch(`https://api.igdb.com/v4/games/`, {
-        method: 'POST',
-        headers: {
-            "Accept": "application/json",
-            "Client-ID": "bwmhssy6u1fe80lb7ou9z7f6n4gbje",
-            "Authorization": "Bearer ubmwzqkcq304n8lfbilehq0z7mhujj"
-        },
-        body: `search "${query}"; fields first_release_date, status, name, cover.*, total_rating; ` +
-            `where total_rating_count >= 10; limit ${10}; offset ${page * 10};`,
-    }).catch((error) => {
+const fetchIgdb = async (endpoint, body) => {
+    try {
+        const response = await fetchIgdb(`https://api.igdb.com/v4/${endpoint}`, {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json",
+                "Client-ID": "bwmhssy6u1fe80lb7ou9z7f6n4gbje",
+                "Authorization": "Bearer ubmwzqkcq304n8lfbilehq0z7mhujj"
+            },
+            body: body
+        });
+
+        if (!response.ok) {
+            throw new Error('Response is not OK:', response.status, response.statusText, await response.json());
+        }
+
+        return response;
+    } catch (error) {
         console.error('Error:', error);
-    });
-
-    return await response.json();
-}
-
-const fetchGamesFromGenres = async (genres) => {
-    const response = await fetch('https://api.igdb.com/v4/games', {
-        method: 'POST',
-        headers: {
-            "Accept": "application/json",
-            "Client-ID": "bwmhssy6u1fe80lb7ou9z7f6n4gbje",
-            "Authorization": "Bearer ubmwzqkcq304n8lfbilehq0z7mhujj"
-        },
-        body: `fields first_release_date, status, name, cover.*, total_rating; ` +
-            `where genres = (${genres}) & total_rating_count >= 40; sort total_rating desc; limit 15;`
-    }).catch((error) => {
-        console.error('Error:', error);
-    });
-
-    return await response.json();
+        throw error;
+    }
 }
 
 router.get('/search', async (req, res) => {
-    let {q: query, p: page, genres} = req.query;
+    let {q: query, p: page} = req.query;
     if (!page || page < 0) page = 0;
 
-    if (!query && !genres) {
-        res.status(400).send('You must provide a query or genres');
+    if (!query) {
+        res.status(400).send('You must provide a query');
         return;
     }
 
-    if (query && genres) {
-        res.status(400).send('You must provide either a query or genres, not both');
+    try {
+        const data = await fetchIgdb('games', `search "${query}"; 
+        fields first_release_date, status, name, cover.*, total_rating; 
+        where total_rating_count >= 10; limit ${10}; offset ${page * 10};`)
+
+        res.send(data);
+    } catch (error) {
+        res.status(500).send('An error occurred while fetching game data');
+    }
+});
+
+router.get('/search/genres', async (req, res) => {
+    let {g: genre} = req.query;
+
+    if (!genre) {
+        res.status(400).send('You must provide a genre');
         return;
     }
 
-    const data = query ? await fetchGamesFromQuery(query, page) : await fetchGamesFromGenres(genres);
+    try {
+        const data = await fetchIgdb('games', `fields first_release_date, status, name, cover.*, total_rating;
+        where genres = (${genre}) & total_rating_count >= 10; limit 10;`)
 
-    res.send(data);
+        res.send(data);
+    } catch (error) {
+        res.status(500).send('An error occurred while fetching game data');
+    }
 });
 
 router.get('/:id', async (req, res) => {
@@ -73,64 +81,44 @@ router.get('/:id', async (req, res) => {
         return;
     }
 
-    const response = await fetch('https://api.igdb.com/v4/games', {
-        method: 'POST',
-        headers: {
-            "Accept": "application/json",
-            "Client-ID": "bwmhssy6u1fe80lb7ou9z7f6n4gbje",
-            "Authorization": "Bearer ubmwzqkcq304n8lfbilehq0z7mhujj"
-        },
-        body: `fields *, 
-        involved_companies.*, involved_companies.company.name, 
-        release_dates.*, release_dates.platform.*,
-        genres.*, 
-        keywords.name,
-        cover.*,
-        screenshots.*, similar_games.*, websites.*, language_supports.*; where id = ${id};`
-    }).catch((error) => {
-        console.error('Error:', error);
-        res.status(500).send('An error occurred while fetching game data');
-        return null;
-    }).then(async (response) => {
-        if (!response.ok) {
-            console.error('Response is not OK:', response.status, response.statusText, await response.json());
-            res.status(500).send('An error occurred while fetching game data');
-            return null;
-        }
-        return response;
-    });
+    try {
+        const data = await fetchIgdb('games', `fields *,
+            involved_companies.*, involved_companies.company.name,
+            release_dates.*, release_dates.platform.*,
+            genres.*, keywords.name, cover.*,
+            screenshots.*, similar_games.*, websites.*, language_supports.*; where id = ${id};`);
 
-    if (!response) return;
+        res.send(data);
+        // send data then update genre history
 
-    const data = await response.json();
+        if (req.isAuthenticated()) {
+            const userId = req.user.id;
+            const genres = data[0].genres;
 
-    if (req.isAuthenticated()) {
-        const userId = req.user.id;
-        const genres = data[0].genres;
+            console.log('Authenticated user:', userId);
+            console.log('Genres:', genres);
 
-        console.log('Authenticated user:', userId);
-        console.log('Genres:', genres);
+            try {
+                if (genres) {
+                    console.log('Updating genre history');
+                    let incOperation = {$inc: {}};
+                    genres.forEach(genre => {
+                        incOperation.$inc[`genre_history.${genre.id}`] = 1;
+                    });
+                    console.log('incOperation:', incOperation);
 
-        try {
-            if (genres) {
-                console.log('Updating genre history');
-                let incOperation = {$inc: {}};
-                genres.forEach(genre => {
-                    incOperation.$inc[`genre_history.${genre.id}`] = 1;
-                });
-                console.log('incOperation:', incOperation);
-
-                await User.updateOne(
-                    {_id: userId},
-                    incOperation
-                );
+                    await User.updateOne(
+                        {_id: userId},
+                        incOperation
+                    );
+                }
+            } catch (error) {
+                console.error('Error:', error);
             }
-        } catch (error) {
-            console.error('Error:', error);
         }
+    } catch (error) {
+        res.status(500).send('An error occurred while fetching game data');
     }
-
-    res.send(data);
 });
 
 router.get('/:id/similar', async (req, res) => {
@@ -141,22 +129,12 @@ router.get('/:id/similar', async (req, res) => {
         return;
     }
 
-    const response = await fetch('https://api.igdb.com/v4/games', {
-        method: 'POST',
-        headers: {
-            "Accept": "application/json",
-            "Client-ID": "bwmhssy6u1fe80lb7ou9z7f6n4gbje",
-            "Authorization": "Bearer ubmwzqkcq304n8lfbilehq0z7mhujj"
-        },
-        body: `fields name, similar_games.*; where id = ${id};`
-    }).catch((error) => {
-        console.error('Error:', error);
-    });
-
-    const data = await response.json();
-    console.log(data);
-
-    res.send(data);
+    try {
+        const data = await fetchIgdb('games', `fields similar_games.*; where id = ${id};`);
+        res.send(data);
+    } catch (error) {
+        res.status(500).send('An error occurred while fetching similar games');
+    }
 });
 
 router.get('/:id/comment', async (req, res) => {
