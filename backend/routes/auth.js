@@ -22,12 +22,6 @@ router.post('/register', async (req, res) => {
         });
         await user.save();
         res.status(201).send('User created');
-        req.login(user, (err) => {
-            if (err) {
-                return next(err);
-            }
-            return res.status(200).send('Logged in');
-        });
     } catch(err) {
         console.error('An error occurred', err);
         res.status(500).send('An error occurred while registering');
