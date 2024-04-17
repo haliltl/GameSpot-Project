@@ -3,7 +3,6 @@ import Home from "./components/Home";
 import { Routes, Route } from 'react-router-dom';
 import React, { useState } from 'react';
 import SearchBar from './components/SearchBar';
-import Game from './components/Game';
 import GameDetails from "./components/GameDetails";
 
 

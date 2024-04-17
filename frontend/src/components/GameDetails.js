@@ -57,7 +57,8 @@ const GameDetails = () => {
       {gameDetails && (
         <div>
           <h2>{gameDetails.name}</h2>
-          {gameDetails.cover && <img src={gameDetails.cover.url} alt={`Cover for ${gameDetails.name}`} />}
+          {gameDetails.cover && <img src={`https://images.igdb.com/igdb/image/upload/t_720p/${gameDetails.cover.url.split('/').pop()}`} 
+            alt={`Cover for ${gameDetails.name}`} /> }
           <p><strong>Release Date:</strong> {new Date(gameDetails.first_release_date).toLocaleDateString()}</p>
           {console.log(gameDetails)}
           {gameDetails.total_rating && <p><strong>Rating:</strong> {gameDetails.total_rating.toFixed(2)}</p>}
