@@ -230,5 +230,4 @@ router.delete('/:id/comment/:cid', isAuthenticated, async (req, res) => {
     }
 });
 
-
 module.exports = router;
