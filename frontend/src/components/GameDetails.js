@@ -6,12 +6,13 @@ import axios from 'axios';
 
 const GameDetails = () => {
     let { gameId } = useParams();
-  const [gameDetails, setGameDetails] = useState(null);
-  const [similarGames, setSimilarGames] = useState([]);
-  const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+    const [gameDetails, setGameDetails] = useState(null);
+    const [similarGames, setSimilarGames] = useState([]);
+    const [comments, setComments] = useState([]);
+    const [newComment, setNewComment] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState("");
+    const token = localStorage.getItem('token');  // Retrieve the stored token here for broader use
 
   useEffect(() => {
     const fetchData = async () => {
@@ -99,15 +100,19 @@ const GameDetails = () => {
                     <ul>
                         {comments.map(comment => <li key={comment._id}>{comment.comment}</li>)}
                     </ul>
-                    <form onSubmit={handleCommentSubmit}>
-                        <input
-                            type="text"
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            placeholder="Type your comment here..."
-                        />
-                        <button type="submit">Post Comment</button>
-                    </form>
+                    {token ? (
+                        <form onSubmit={handleCommentSubmit}>
+                            <input
+                                type="text"
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                                placeholder="Type your comment here..."
+                            />
+                            <button type="submit">Post Comment</button>
+                        </form>
+                    ) : (
+                        <p>You need to <a href="/login">login</a> to add comments.</p>  // Update this link as per your routing
+                    )}
                 </div>
             )}
         </div>
