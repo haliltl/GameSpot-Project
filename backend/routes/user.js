@@ -26,6 +26,29 @@ router.get('/profile', isAuthenticated, (req, res) => {
     res.status(200).send(user);
 });
 
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id);
+        if (!user) {
+            res.status(404).send('User not found');
+            return;
+        }
+
+        const response = {
+            _id: user._id,
+            username: user.username,
+            favourite_games: user.favourite_games,
+        };
+
+        res.status(200).send(response);
+    } catch (error) {
+        console.error("Error occurred while fetching user ", error);
+        res.status(500).send('An error occurred');
+
+    }
+});
+
 router.get('/favourite/', isAuthenticated, async (req, res) => {
     try {
         const userId = req.user.id;
