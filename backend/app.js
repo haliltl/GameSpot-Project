@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const passport = require('passport');
-const session = require('express-session');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 require('./passport-config')(passport);
@@ -11,9 +10,7 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors({origin: 'http://localhost:3001', exposedHeaders: 'Authorization'}));
-app.use(session({ secret: 'secret', resave: true, saveUninitialized: true }));
 app.use(passport.initialize());
-app.use(passport.session());
 
 app.use('/user', require('./routes/user'));
 app.use('/game', require('./routes/game'));
