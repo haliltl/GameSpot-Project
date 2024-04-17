@@ -16,7 +16,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/search" element={<SearchBar />} />
-          <Route path="/details/:gameId" element={<GameDetails />}></Route>
+          <Route path="/game/:gameId" element={<GameDetails />} />
         </Routes>
 
       </div>

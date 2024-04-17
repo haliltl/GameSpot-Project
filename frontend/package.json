@@ -20,7 +20,6 @@
     "eject": "react-scripts eject"
   },
   "proxy": "https://api.igdb.com",
-  
   "eslintConfig": {
     "extends": [
       "react-app",
