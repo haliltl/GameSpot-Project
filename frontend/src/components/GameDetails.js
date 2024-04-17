@@ -28,15 +28,9 @@ const GameDetails = () => {
 
         console.log(detailsResponse.data)
 
-        const similarResponse = await axios({
-          method: 'GET',
-          url: `http://localhost:3000/game/${gameId}`,
-        });
-
         const commentsResponse = await axios.get(`http://localhost:3000/game/${gameId}/comment`);
 
         setGameDetails(detailsResponse.data[0]);
-        setSimilarGames(similarResponse.data);
         setComments(commentsResponse.data);
       } catch (err) {
         console.error('Failed to fetch data:', err);
@@ -98,7 +92,8 @@ const GameDetails = () => {
                     {gameDetails.total_rating && <p><strong>Rating:</strong> {gameDetails.total_rating.toFixed(2)}</p>}
                     <h3>Similar Games</h3>
                     <ul>
-                        {similarGames.map(game => <li key={game.id}>{game.name}</li>)}
+                        {gameDetails.similar_games && gameDetails.similar_games.length > 0 &&
+                          gameDetails.similar_games.map(game => <li key={game.id}>{game.name}</li>)}
                     </ul>
                     <h3>Comments</h3>
                     <ul>
