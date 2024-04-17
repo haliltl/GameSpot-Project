@@ -14,7 +14,6 @@ const Home = () => {
             await fetch('http://localhost:3000/game/search/genres')
                 .then(response => response.json())
                 .then(data => {
-                    genres = data;
                     setGenres(data);
                 })
                 .catch(error => {
