@@ -14,7 +14,7 @@ function isAuthenticated(req, res, next) {
 
 const fetchIgdb = async (endpoint, body) => {
     try {
-        const response = await fetchIgdb(`https://api.igdb.com/v4/${endpoint}`, {
+        const response = await fetch(`https://api.igdb.com/v4/${endpoint}`, {
             method: 'POST',
             headers: {
                 "Accept": "application/json",
@@ -25,10 +25,10 @@ const fetchIgdb = async (endpoint, body) => {
         });
 
         if (!response.ok) {
-            throw new Error('Response is not OK:', response.status, response.statusText, await response.json());
+            throw new Error(`Response not OK: ${response.status}. ${response.statusText}. ${await response.text()}`);
         }
 
-        return response;
+        return await response.json();
     } catch (error) {
         console.error('Error:', error);
         throw error;
@@ -73,6 +73,21 @@ router.get('/search/genres', async (req, res) => {
     }
 });
 
+router.get('/recent', async (req, res) => {
+    try {
+        const dateThreshold = Math.floor(new Date().getTime() / 1000) - (60 * 60 * 24 * 60); // 60 days
+        console.log('dateThreshold:', dateThreshold);
+
+        const data = await fetchIgdb('games', `fields first_release_date, status, name, cover.*, total_rating;
+        where total_rating_count >= 5 & first_release_date > ${dateThreshold}; sort total_rating desc; limit 20;`);
+        console.log(data)
+
+        res.send(data);
+    } catch (error) {
+        res.status(500).send('An error occurred while fetching popular games');
+    }
+});
+
 router.get('/:id', async (req, res) => {
     const {id} = req.params;
 
@@ -94,9 +109,6 @@ router.get('/:id', async (req, res) => {
         if (req.isAuthenticated()) {
             const userId = req.user.id;
             const genres = data[0].genres;
-
-            console.log('Authenticated user:', userId);
-            console.log('Genres:', genres);
 
             try {
                 if (genres) {
