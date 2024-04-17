@@ -140,23 +140,26 @@ router.get('/:id', async (req, res) => {
         // send data then update genre history
 
         isAuthenticatedCallback(req, async (isAuthenticated) => {
+            console.log('isAuthenticated:', isAuthenticated);
             if (!isAuthenticated) return;
 
-            const userId = req.user.id;
+            const userId = req.user._id;
             const genres = data[0].genres;
 
-            try {
+            try { 
                 if (genres) {
-                    console.log('Updating genre history');
                     let incOperation = {$inc: {}};
                     genres.forEach(genre => {
                         incOperation.$inc[`genre_history.${genre.id}`] = 1;
                     });
+                    console.log('incOperation:', incOperation);
 
-                    await User.updateOne(
+                    const updateResponse = await User.updateOne(
                       {_id: userId},
                       incOperation
                     );
+
+                    console.log('updateResponse:', updateResponse);
                 }
             } catch (error) {
                 console.error('Error:', error);

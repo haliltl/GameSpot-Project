@@ -71,7 +71,7 @@ const GameDetails = () => {
 
     fetchData();
 
-    setCurrentUser(jwtDecode(token));
+    if (token) setCurrentUser(jwtDecode(token));
   }, []);
 
   const handleCommentSubmit = async (event) => {
@@ -89,7 +89,7 @@ const GameDetails = () => {
       };
 
       try {
-        const response = await axios.post(
+        await axios.post(
           `http://localhost:3000/game/${gameId}/comment`,
           {comment: newComment},
           {headers: headers}
